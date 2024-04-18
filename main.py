@@ -130,6 +130,44 @@ for ind, (image_id, label) in enumerate(zip(sample.image_id, sample.label)):
     plt.axis("off")
     
 plt.show()
+
+
+from PIL import Image
+import os
+import shutil
+
+def is_green_pixel(pixel):
+    r, g, b = pixel[:3]  
+    return g > r and g > b
+
+def green_pixel_ratio(image_path):
+    with Image.open(image_path) as img:
+        pixels = img.getdata()
+        green_count = sum(1 for pixel in pixels if is_green_pixel(pixel))
+        total_count = len(pixels)
+        return green_count / total_count if total_count else 0
+
+image_folder = './Dataset/train_images'
+new_image_folder = './Dataset/new_train'
+no_leaf_image_folder = './Dataset/noleaf_image'
+green_threshold = 0.05  
+
+
+os.makedirs(new_image_folder, exist_ok=True)
+os.makedirs(no_leaf_image_folder, exist_ok=True)
+
+
+for image_name in os.listdir(image_folder):
+    image_path = os.path.join(image_folder, image_name)
+    green_ratio = green_pixel_ratio(image_path)
+    if green_ratio > green_threshold:
+        
+        shutil.copy(image_path, os.path.join(new_image_folder, image_name))
+        #print(f"Copied to new_train: {image_path} (Green ratio: {green_ratio:.2%})")
+    else:
+        
+        shutil.copy(image_path, os.path.join(no_leaf_image_folder, image_name))
+        print(f"Copied to noleaf_image: {image_path} (Green ratio: {green_ratio:.2%}, below threshold)")
 # baseline model for this task
 
 baseline_pred = [3] * len(label_data)
